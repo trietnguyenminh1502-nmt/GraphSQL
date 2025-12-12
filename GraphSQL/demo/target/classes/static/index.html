@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Product Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        button.secondary:hover {
+            background: #e0e0e0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .product-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+        
+        .product-title {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .product-price {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .product-info {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .product-info span {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .product-user {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state p {
+            font-size: 1.2em;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-section label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .filter-section select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .refresh-icon {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 12px 24px;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ GraphQL Product Management</h1>
+        <p class="subtitle">Quản lý sản phẩm bằng Spring Boot 3 với GraphQL</p>
+        
+        <div class="controls">
+            <button onclick="loadAllProducts()">📦 Tất cả sản phẩm</button>
+            <button class="secondary" onclick="toggleFilterSection()">🔽 Lọc theo danh mục</button>
+            <button class="secondary" onclick="refreshProducts()">🔄 Làm mới</button>
+        </div>
+        
+        <div id="filterSection" class="filter-section" style="display: none;">
+            <label for="categorySelect">Chọn danh mục:</label>
+            <select id="categorySelect" onchange="loadProductsByCategory()">
+                <option value="">-- Chọn danh mục --</option>
+            </select>
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <div id="content">
+            <div class="loading">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+
+    <script>
+        // GraphQL Query để lấy tất cả sản phẩm
+        const GET_ALL_PRODUCTS_QUERY = `
+            query {
+                allProducts {
+                    id
+                    title
+                    quantity
+                    desc
+                    price
+                    user {
+                        id
+                        fullname
+                        email
+                    }
+                }
+            }
+        `;
+
+        // GraphQL Query để lấy sản phẩm theo danh mục
+        const GET_PRODUCTS_BY_CATEGORY_QUERY = `
+            query($categoryId: ID!) {
+                productsByCategory(categoryId: $categoryId) {
+                    id
+                    title
+                    quantity
+                    desc
+                    price
+                    user {
+                        id
+                        fullname
+                        email
+                    }
+                }
+            }
+        `;
+
+        // GraphQL Query để lấy tất cả danh mục
+        const GET_ALL_CATEGORIES_QUERY = `
+            query {
+                allCategories {
+                    id
+                    name
+                    images
+                }
+            }
+        `;
+
+        // Hàm gọi GraphQL API
+        async function graphqlQuery(query, variables = {}) {
+            try {
+                const response = await fetch('/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        variables: variables
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.errors) {
+                    showError('Lỗi từ server: ' + data.errors.map(e => e.message).join(', '));
+                    return null;
+                }
+
+                return data.data;
+            } catch (error) {
+                showError('Lỗi kết nối: ' + error.message);
+                return null;
+            }
+        }
+
+        // Hàm hiển thị các sản phẩm
+        function renderProducts(products) {
+            if (!products || products.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <p>😕 Không có sản phẩm nào</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const productsHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-title">${escapeHtml(product.title)}</div>
+                    <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                    <div class="product-info">
+                        <span><strong>Số lượng:</strong> ${product.quantity} sản phẩm</span>
+                        <span><strong>Mô tả:</strong> ${product.desc ? escapeHtml(product.desc) : 'Không có mô tả'}</span>
+                    </div>
+                    <div class="product-user">
+                        <strong>Người bán:</strong> ${escapeHtml(product.user.fullname)}<br/>
+                        <span style="font-size: 0.9em;">${escapeHtml(product.user.email)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('content').innerHTML = `
+                <div class="products-grid">
+                    ${productsHTML}
+                </div>
+            `;
+        }
+
+        // Hàm bảo vệ khỏi XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Hàm hiển thị lỗi
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '⚠️ ' + message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Hàm tải tất cả sản phẩm
+        async function loadAllProducts() {
+            document.getElementById('content').innerHTML = '<div class="loading">Đang tải dữ liệu...</div>';
+            const data = await graphqlQuery(GET_ALL_PRODUCTS_QUERY);
+            if (data && data.allProducts) {
+                renderProducts(data.allProducts);
+            }
+        }
+
+        // Hàm tải sản phẩm theo danh mục
+        async function loadProductsByCategory() {
+            const categoryId = document.getElementById('categorySelect').value;
+            if (!categoryId) {
+                showError('Vui lòng chọn một danh mục');
+                return;
+            }
+            
+            document.getElementById('content').innerHTML = '<div class="loading">Đang tải dữ liệu...</div>';
+            const data = await graphqlQuery(GET_PRODUCTS_BY_CATEGORY_QUERY, { categoryId: categoryId });
+            if (data && data.productsByCategory) {
+                renderProducts(data.productsByCategory);
+            }
+        }
+
+        // Hàm làm mới sản phẩm
+        function refreshProducts() {
+            loadAllProducts();
+        }
+
+        // Hàm bật/tắt phần lọc
+        function toggleFilterSection() {
+            const filterSection = document.getElementById('filterSection');
+            filterSection.style.display = filterSection.style.display === 'none' ? 'block' : 'none';
+            if (filterSection.style.display === 'block') {
+                loadCategories();
+            }
+        }
+
+        // Hàm tải danh mục
+        async function loadCategories() {
+            const data = await graphqlQuery(GET_ALL_CATEGORIES_QUERY);
+            if (data && data.allCategories) {
+                const categorySelect = document.getElementById('categorySelect');
+                const currentValue = categorySelect.value;
+                const options = '<option value="">-- Chọn danh mục --</option>' + 
+                    data.allCategories.map(cat => 
+                        `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`
+                    ).join('');
+                categorySelect.innerHTML = options;
+                categorySelect.value = currentValue;
+            }
+        }
+
+        // Tải sản phẩm khi trang load
+        window.addEventListener('load', () => {
+            loadAllProducts();
+        });
+    </script>
+</body>
+</html>
