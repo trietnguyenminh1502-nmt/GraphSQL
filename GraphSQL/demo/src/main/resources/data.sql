@@ -1,8 +1,9 @@
--- Insert Users
-INSERT INTO users (fullname, email, password, phone) VALUES 
-('Nguyễn Văn A', 'nguyenvana@example.com', 'password123', '0901234567'),
-('Trần Thị B', 'tranthib@example.com', 'password456', '0987654321'),
-('Lê Văn C', 'levanc@example.com', 'password789', '0912345678');
+-- Insert Users (include role column)
+INSERT INTO users (fullname, email, password, phone, role) VALUES 
+('Admin System', 'admin@example.com', 'adminpass', '0900000000', 'ADMIN'),
+('Nguyễn Văn A', 'nguyenvana@example.com', 'password123', '0901234567', 'USER'),
+('Trần Thị B', 'tranthib@example.com', 'password456', '0987654321', 'USER'),
+('Lê Văn C', 'levanc@example.com', 'password789', '0912345678', 'USER');
 
 -- Insert Categories
 INSERT INTO categories (name, images) VALUES 
